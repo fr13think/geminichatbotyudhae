@@ -1,7 +1,4 @@
-body {
-    font-family: 'Inter', sans-serif;
-}
-
+body { font-family: 'Inter', sans-serif; }
 /* --- Gaya Pesan Chat --- */
 .chat-message { display: flex; max-width: 85%; margin-bottom: 1rem; animation: fadeIn 0.5s ease-in-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -9,33 +6,36 @@ body {
 .user-message { margin-left: auto; flex-direction: row-reverse; }
 .user-message .message-text { background-color: #2563eb; color: white; border-top-right-radius: 0.5rem; }
 .bot-message { margin-right: auto; }
-
-/* Gaya pesan bot untuk tema terang (default) dan gelap */
 .bot-message .message-text { background-color: #e5e7eb; color: #1f2937; border-top-left-radius: 0.5rem; }
 .dark .bot-message .message-text { background-color: #4b5563; color: white;}
-
 /* --- Gaya Konten Markdown & Tombol Salin --- */
 .bot-message pre { padding: 1rem; border-radius: 0.5rem; margin: 0.75rem 0; white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', Courier, monospace; font-size: 0.9em; position: relative; }
 .dark .bot-message pre { background-color: #1f2937; color: #f9fafb; }
 .bot-message pre { background-color: #f3f4f6; color: #1f2937; }
-
 .bot-message p > code, .bot-message li > code { padding: 0.2em 0.4em; border-radius: 3px; font-size: 85%; }
 .dark .bot-message p > code, .dark .bot-message li > code { background-color: #4b5563; }
 .bot-message p > code, .bot-message li > code { background-color: #d1d5db; }
-
 .copy-code-btn { position: absolute; top: 8px; right: 8px; background-color: #374151; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em; opacity: 0; transition: opacity 0.2s; }
 .bot-message pre:hover .copy-code-btn { opacity: 1; }
-
 /* --- Gaya Efek Mengetik (Streaming) --- */
 .blinking-cursor { animation: blink 1s step-end infinite; }
 @keyframes blink { from, to { color: transparent; } 50% { color: inherit; } }
-
 /* --- Gaya Tombol Saran --- */
 .suggestion-btn { padding: 8px 12px; border-radius: 16px; font-size: 0.875rem; cursor: pointer; border: none; transition: background-color 0.2s; }
 .dark .suggestion-btn { background-color: #374151; color: #d1d5db; }
 .suggestion-btn { background-color: #e5e7eb; color: #374151; }
 .dark .suggestion-btn:hover { background-color: #4b5563; }
 .suggestion-btn:hover { background-color: #d1d5db; }
+/* --- Gaya Menu Upload --- */
+.upload-option-btn { display: flex; align-items: center; width: 100%; padding: 12px 16px; text-align: left; font-size: 0.9rem; transition: background-color 0.2s; }
+.dark .upload-option-btn { color: #f9fafb; }
+.upload-option-btn { color: #1f2937; }
+.dark .upload-option-btn:hover { background-color: #4b5563; }
+.upload-option-btn:hover { background-color: #e5e7eb; }
+
+/* --- Gaya Pratinjau Lampiran di Chat --- */
+.attachment-preview { display: flex; align-items: center; gap: 8px; background-color: rgba(0,0,0,0.1); padding: 8px 12px; border-radius: 8px; margin-bottom: 8px; }
+.dark .attachment-preview { background-color: rgba(255,255,255,0.1); }
 
 /* --- Scrollbar --- */
 #chat-box::-webkit-scrollbar { width: 8px; }

@@ -6,51 +6,65 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // --- Initialize Express App ---
 const app = express();
-const port = process.env.PORT || 3000;
-
-// --- Middlewares ---
+// Tingkatkan batas payload untuk menerima gambar base64
+app.use(express.json({ limit: '10mb' })); 
 app.use(cors());
-app.use(express.json());
 app.use(express.static('public'));
+
+const port = process.env.PORT || 3000;
 
 // --- Initialize Google Generative AI ---
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+
+// **DIPERBAIKI**: Menggunakan satu model multimodal yang lebih baru
+// Model 'gemini-1.5-flash' dapat menangani input teks dan gambar.
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-// --- API Route for Chat (Updated for Context & Streaming) ---
+// --- API Route for Chat (Updated for Multimodal Input) ---
 app.post('/api/chat', async (req, res) => {
     try {
-        const { history } = req.body; // Menerima riwayat percakapan
+        const { history, message, file } = req.body;
 
-        if (!history || history.length === 0) {
-            return res.status(400).json({ error: "Chat history is required." });
+        if (!message) {
+            return res.status(400).json({ error: "Message is required." });
         }
-
+        
+        // Siapkan prompt
+        const userPrompt = [{ text: message }];
+        if (file && file.data && file.mimeType) {
+            // Hapus header base64 jika ada (contoh: "data:image/jpeg;base64,")
+            const base64Data = file.data.split(',')[1] || file.data;
+            userPrompt.unshift({ // Letakkan gambar di awal untuk konteks yang lebih baik
+                inlineData: {
+                    mimeType: file.mimeType,
+                    data: base64Data,
+                },
+            });
+        }
+        
         // Mengatur header untuk streaming
         res.setHeader('Content-Type', 'text/event-stream');
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
-        res.flushHeaders(); // Kirim header segera
+        res.flushHeaders();
 
         // Memulai sesi chat dengan riwayat yang ada
         const chat = model.startChat({
-            history: history.slice(0, -1), // Kirim semua riwayat kecuali pesan terakhir dari pengguna
+            history: history || [],
         });
 
         // Mengirim pesan terakhir sebagai stream
-        const lastMessage = history[history.length - 1].parts[0].text;
-        const result = await chat.sendMessageStream(lastMessage);
+        const result = await chat.sendMessageStream(userPrompt);
 
         // Mengirim setiap potongan (chunk) respons ke klien
         for await (const chunk of result.stream) {
             const chunkText = chunk.text();
             res.write(`data: ${JSON.stringify({ text: chunkText })}\n\n`);
         }
-
-        res.end(); // Menutup koneksi setelah stream selesai
+        res.end();
 
     } catch (error) {
-        console.error("Error in chat streaming:", error);
+        console.error("Error in chat processing:", error);
         res.write(`data: ${JSON.stringify({ error: "Terjadi kesalahan pada server." })}\n\n`);
         res.end();
     }
