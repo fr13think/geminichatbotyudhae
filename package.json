@@ -1,0 +1,18 @@
+{
+  "name": "geminihactivchatbot",
+  "version": "1.0.0",
+  "description": "Ringkasan Aturan Main (Sangat Penting) Gemini 1.5\r Jika Anda Menguji Endpoint...\tMiddleware yang Digunakan di Kode\tKonfigurasi Body di Postman yang Benar\r /generate-text\texpress.json()\traw lalu pilih JSON\r /generate-from-image\tupload.single('image')\tform-data\r /generate-from-document\tupload.single('document')\tform-data",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0"
+  }
+}
