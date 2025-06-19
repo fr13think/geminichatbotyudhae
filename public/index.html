@@ -8,42 +8,44 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-
-    <!-- PENTING: Menambahkan kembali script Tailwind CSS & Konfigurasi dark mode -->
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            darkMode: 'class'
-        }
+        tailwind.config = { darkMode: 'class' }
     </script>
 </head>
 <body class="bg-white dark:bg-gray-900 text-gray-800 dark:text-white flex justify-center items-center min-h-screen font-sans transition-colors duration-300">
 
-    <div id="chat-container" class="w-full max-w-2xl bg-gray-100 dark:bg-gray-800 rounded-2xl shadow-2xl flex flex-col h-[90vh] md:h-[80vh]">
-        <header class="bg-gray-200 dark:bg-gray-700 p-4 rounded-t-2xl shadow-md flex justify-between items-center">
+    <div id="chat-container" class="w-full h-full sm:max-w-2xl sm:h-[90vh] md:h-[85vh] bg-gray-100 dark:bg-gray-800 sm:rounded-2xl shadow-2xl flex flex-col">
+        <header class="bg-gray-200 dark:bg-gray-700 p-4 sm:rounded-t-2xl shadow-md flex justify-between items-center">
             <h1 class="text-xl font-bold">Gemini Chatbot</h1>
-            <!-- Tombol untuk mengganti tema -->
-            <button id="theme-toggle" class="p-2 rounded-full text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none">
-                <!-- Ikon akan diatur oleh JS -->
-            </button>
+            <div class="flex items-center gap-2">
+                <!-- Tombol Hapus Riwayat -->
+                <button id="clear-chat-btn" title="Clear Chat History" class="p-2 rounded-full text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+                <!-- Tombol Tema -->
+                <button id="theme-toggle" title="Toggle Theme" class="p-2 rounded-full text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none">
+                    <!-- Ikon diatur oleh JS -->
+                </button>
+            </div>
         </header>
         
-        <main id="chat-box" class="flex-1 p-6 overflow-y-auto space-y-4">
-             <!-- Konten chat (riwayat) akan dimuat di sini -->
+        <main id="chat-box" class="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4">
+             <!-- Konten chat dimuat di sini -->
         </main>
 
-        <!-- Wadah untuk contoh pertanyaan -->
         <div id="prompt-suggestions" class="p-4 border-t border-gray-200 dark:border-gray-700">
             <h3 class="text-center text-sm text-gray-500 dark:text-gray-400 mb-2">Atau coba salah satu:</h3>
             <div class="flex flex-wrap justify-center gap-2">
                 <button class="suggestion-btn">Jelaskan apa itu Node.js</button>
                 <button class="suggestion-btn">Buatkan puisi tentang kopi</button>
-                <button class="suggestion-btn">Apa saja fitur baru di ES6?</button>
+                <button class="suggestion-btn">Siapa presiden pertama Indonesia?</button>
             </div>
         </div>
 
-        <footer class="p-4 bg-gray-100 dark:bg-gray-800 rounded-b-2xl border-t border-gray-200 dark:border-gray-700">
-            <form id="chat-form" class="flex items-center space-x-4">
+        <footer class="p-4 bg-gray-100 dark:bg-gray-800 sm:rounded-b-2xl border-t border-gray-200 dark:border-gray-700">
+            <form id="chat-form" class="flex items-center space-x-2 sm:space-x-4">
                 <input 
                     type="text" 
                     id="user-input" 
@@ -53,7 +55,7 @@
                 >
                 <button 
                     type="submit"
-                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 sm:px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
                 >
                     Send
                 </button>
@@ -61,7 +63,6 @@
         </footer>
     </div>
 
-    <!-- Library untuk format Markdown -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
     <script src="script.js"></script>
 </body>

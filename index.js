@@ -1,7 +1,7 @@
 // Import necessary packages
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config(); // To load environment variables from .env file
+require('dotenv').config();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // --- Initialize Express App ---
@@ -9,39 +9,50 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // --- Middlewares ---
-app.use(cors()); // Enable Cross-Origin Resource Sharing
-app.use(express.json()); // To parse JSON bodies
-app.use(express.static('public')); // To serve static files (HTML, CSS, JS)
+app.use(cors());
+app.use(express.json());
+app.use(express.static('public'));
 
 // --- Initialize Google Generative AI ---
-// Make sure you have your GOOGLE_API_KEY in the .env file
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-// FIXED: Updated the model name to a current, valid model.
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-// --- API Route for Chat ---
-// This is the endpoint your frontend will call
+// --- API Route for Chat (Updated for Context & Streaming) ---
 app.post('/api/chat', async (req, res) => {
-    const userMessage = req.body.message;
-
-    if (!userMessage) {
-        return res.status(400).json({ reply: "Message is required." });
-    }
-
     try {
-        console.log(`Received message: ${userMessage}`);
+        const { history } = req.body; // Menerima riwayat percakapan
 
-        // Generate content using the Gemini model
-        const result = await model.generateContent(userMessage);
-        const response = await result.response;
-        const text = response.text();
-        
-        console.log(`Sending reply: ${text}`);
-        res.json({ reply: text });
+        if (!history || history.length === 0) {
+            return res.status(400).json({ error: "Chat history is required." });
+        }
 
-    } catch (err) {
-        console.error("Error calling Gemini API:", err);
-        res.status(500).json({ reply: "Something went wrong on our end." });
+        // Mengatur header untuk streaming
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+        res.flushHeaders(); // Kirim header segera
+
+        // Memulai sesi chat dengan riwayat yang ada
+        const chat = model.startChat({
+            history: history.slice(0, -1), // Kirim semua riwayat kecuali pesan terakhir dari pengguna
+        });
+
+        // Mengirim pesan terakhir sebagai stream
+        const lastMessage = history[history.length - 1].parts[0].text;
+        const result = await chat.sendMessageStream(lastMessage);
+
+        // Mengirim setiap potongan (chunk) respons ke klien
+        for await (const chunk of result.stream) {
+            const chunkText = chunk.text();
+            res.write(`data: ${JSON.stringify({ text: chunkText })}\n\n`);
+        }
+
+        res.end(); // Menutup koneksi setelah stream selesai
+
+    } catch (error) {
+        console.error("Error in chat streaming:", error);
+        res.write(`data: ${JSON.stringify({ error: "Terjadi kesalahan pada server." })}\n\n`);
+        res.end();
     }
 });
 

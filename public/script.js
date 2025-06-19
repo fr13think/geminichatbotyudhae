@@ -5,17 +5,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const userInput = document.getElementById('user-input');
     const chatBox = document.getElementById('chat-box');
     const themeToggle = document.getElementById('theme-toggle');
+    const clearChatBtn = document.getElementById('clear-chat-btn');
     const promptSuggestions = document.getElementById('prompt-suggestions');
 
     // --- Inisialisasi ---
     const converter = new showdown.Converter({ noHeaderId: true, strikethrough: true, tables: true, tasklists: true, simpleLineBreaks: true });
     let chatHistory = [];
+    let isStreaming = false;
 
-    // --- Ikon untuk Tema ---
+    // --- Ikon SVG ---
     const sunIcon = `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm-7.071 0a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-12 0a1 1 0 100-2H4a1 1 0 100 2h1zM4.95 6.464l.707-.707a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414zM15.05 13.536l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM10 18a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1z"></path></svg>`;
     const moonIcon = `<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>`;
 
-    // --- Fungsi Tema ---
+    // --- Fungsi Tema & Hapus Riwayat ---
     const applyTheme = (theme) => {
         if (theme === 'dark') {
             htmlElement.classList.add('dark');
@@ -27,9 +29,18 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('theme', theme);
     };
 
+    clearChatBtn.addEventListener('click', () => {
+        if (isStreaming) return;
+        if (confirm('Apakah Anda yakin ingin menghapus riwayat obrolan?')) {
+            chatHistory = [];
+            localStorage.removeItem('geminiChatHistory');
+            loadChatHistory();
+        }
+    });
+
     themeToggle.addEventListener('click', () => {
-        const isDark = htmlElement.classList.contains('dark');
-        applyTheme(isDark ? 'light' : 'dark');
+        const newTheme = htmlElement.classList.contains('dark') ? 'light' : 'dark';
+        applyTheme(newTheme);
     });
 
     // --- Fungsi Riwayat & Tampilan Chat ---
@@ -37,55 +48,60 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const loadChatHistory = () => {
         const savedHistory = localStorage.getItem('geminiChatHistory');
-        chatBox.innerHTML = ''; // Kosongkan chat box sebelum memuat riwayat
-        if (savedHistory) {
+        chatBox.innerHTML = '';
+        if (savedHistory && JSON.parse(savedHistory).length > 0) {
             chatHistory = JSON.parse(savedHistory);
-            chatHistory.forEach(msg => addMessageToDOM(msg.message, msg.sender));
+            chatHistory.forEach(msg => addMessageToDOM(msg.parts[0].text, msg.role === 'user' ? 'user' : 'bot'));
         } else {
-            // Tambahkan pesan sambutan jika tidak ada riwayat
+            chatHistory = [];
             addMessageToDOM('Hello! How can I help you today?', 'bot');
         }
         togglePromptSuggestions();
     };
     
     const addMessageToHistory = (message, sender) => {
-        chatHistory.push({ message, sender });
+        if (chatHistory.length === 1 && chatHistory[0].role === 'model') {
+            chatHistory = [];
+        }
+        chatHistory.push({ role: sender === 'user' ? 'user' : 'model', parts: [{ text: message }] });
         saveChatHistory();
         togglePromptSuggestions();
     };
-
-    const togglePromptSuggestions = () => {
-        promptSuggestions.style.display = chatHistory.length <= 1 ? 'block' : 'none';
+    
+    const updateLastBotMessageInHistory = (message) => {
+        if (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'model') {
+            chatHistory[chatHistory.length - 1].parts[0].text = message;
+            saveChatHistory();
+        }
     };
 
-    const addMessageToDOM = (message, sender, isTyping = false) => {
+    const togglePromptSuggestions = () => {
+        const hasUserMessages = chatHistory.some(msg => msg.role === 'user');
+        promptSuggestions.style.display = !hasUserMessages ? 'block' : 'none';
+    };
+
+    const addMessageToDOM = (message, sender) => {
         const messageElement = document.createElement('div');
         messageElement.classList.add('chat-message', `${sender}-message`);
-        if (isTyping) messageElement.classList.add('typing');
-
         const messageText = document.createElement('div');
         messageText.classList.add('message-text');
 
-        if (sender === 'bot') {
-            messageText.innerHTML = converter.makeHtml(message);
-        } else {
+        if (sender === 'user') {
             messageText.textContent = message;
+        } else {
+            messageText.innerHTML = converter.makeHtml(message);
         }
         
         messageElement.appendChild(messageText);
         chatBox.appendChild(messageElement);
         chatBox.scrollTop = chatBox.scrollHeight;
-
-        if (sender === 'bot' && !isTyping) {
-            addCopyButtons(messageElement);
-        }
+        if (sender === 'bot') addCopyButtons(messageElement);
         return messageElement;
     };
     
-    // --- Fungsi Tombol Salin Kode ---
     const addCopyButtons = (messageElement) => {
-        const codeBlocks = messageElement.querySelectorAll('pre');
-        codeBlocks.forEach(block => {
+        messageElement.querySelectorAll('pre').forEach(block => {
+            if (block.querySelector('.copy-code-btn')) return;
             const btn = document.createElement('button');
             btn.className = 'copy-code-btn';
             btn.textContent = 'Copy';
@@ -100,43 +116,74 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-    // --- Fungsi Utama (Submit Form) ---
+    // --- Fungsi Utama (Submit Form dengan Streaming) ---
     const handleFormSubmit = async (message) => {
-        // Hapus pesan sambutan jika ini pesan pertama
-        if (chatHistory.length === 0) {
+        if (isStreaming) return;
+        isStreaming = true;
+
+        if (chatHistory.length === 0 || (chatHistory.length === 1 && chatHistory[0].role === 'model')) {
             chatBox.innerHTML = '';
+            chatHistory = [];
         }
 
         addMessageToHistory(message, 'user');
         addMessageToDOM(message, 'user');
         userInput.value = '';
 
-        const botTypingElement = addMessageToDOM('...', 'bot', true);
-        const botTextElement = botTypingElement.querySelector('.message-text');
+        const botMessageElement = addMessageToDOM('', 'bot');
+        const botTextElement = botMessageElement.querySelector('.message-text');
+        const cursorSpan = document.createElement('span');
+        cursorSpan.className = 'blinking-cursor';
+        cursorSpan.innerHTML = '&#9646;';
+        botTextElement.appendChild(cursorSpan);
+        
+        addMessageToHistory('', 'bot');
+
+        let fullResponse = "";
 
         try {
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message }),
+                body: JSON.stringify({ history: chatHistory }),
             });
 
-            if (!response.ok) throw new Error(`HTTP error! ${response.status}`);
-            
-            const data = await response.json();
-            
-            addMessageToHistory(data.reply, 'bot');
-            botTextElement.innerHTML = converter.makeHtml(data.reply);
-            addCopyButtons(botTypingElement);
+            if (!response.ok) throw new Error(`Server error: ${response.statusText}`);
 
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n\n');
+                
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.substring(6));
+                            if (data.text) {
+                                fullResponse += data.text;
+                                botTextElement.innerHTML = converter.makeHtml(fullResponse) + cursorSpan.outerHTML;
+                                chatBox.scrollTop = chatBox.scrollHeight;
+                            }
+                        } catch (e) {
+                            console.error("Invalid JSON in stream chunk:", line);
+                        }
+                    }
+                }
+            }
         } catch (error) {
-            console.error('Error fetching from API:', error);
-            const errorMessage = 'Maaf, terjadi kesalahan. Silakan coba lagi.';
-            addMessageToHistory(errorMessage, 'bot');
-            botTextElement.innerHTML = converter.makeHtml(errorMessage);
+            console.error('Streaming error:', error);
+            botTextElement.innerHTML = converter.makeHtml("Maaf, terjadi kesalahan.");
+            fullResponse = "Maaf, terjadi kesalahan.";
         } finally {
-            botTypingElement.classList.remove('typing');
-            chatBox.scrollTop = chatBox.scrollHeight;
+            cursorSpan.remove();
+            addCopyButtons(botMessageElement);
+            updateLastBotMessageInHistory(fullResponse || "Tidak ada respons.");
+            isStreaming = false;
         }
     };
 
@@ -146,15 +193,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (userMessage) handleFormSubmit(userMessage);
     });
 
-    // --- Event Listener untuk Contoh Pertanyaan ---
     promptSuggestions.addEventListener('click', (e) => {
         if (e.target.classList.contains('suggestion-btn')) {
-            const message = e.target.textContent;
-            handleFormSubmit(message);
+            handleFormSubmit(e.target.textContent);
         }
     });
 
-    // --- Inisialisasi Saat Halaman Dimuat ---
+    // --- Inisialisasi Awal ---
     const preferredTheme = localStorage.getItem('theme') || 'dark';
     applyTheme(preferredTheme);
     loadChatHistory();
