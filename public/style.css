@@ -1,136 +1,141 @@
-/* Using Google Fonts for better typography */
 body {
     font-family: 'Inter', sans-serif;
 }
 
-/* Custom styles for chat messages for more control */
+/* --- Gaya Pesan Chat --- */
 .chat-message {
     display: flex;
-    max-width: 85%; /* Increased max-width for better code block display */
+    max-width: 85%;
     margin-bottom: 1rem;
     animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .message-text {
     padding: 0.75rem 1rem;
     border-radius: 1.25rem;
     line-height: 1.6;
-    color: white;
+    word-wrap: break-word;
 }
 
 .user-message {
-    margin-left: auto; /* Align user messages to the right */
+    margin-left: auto;
     flex-direction: row-reverse;
 }
 
 .user-message .message-text {
-    background-color: #2563eb; /* A nice blue for the user */
+    background-color: #2563eb;
+    color: white;
     border-top-right-radius: 0.5rem;
 }
 
 .bot-message {
-    margin-right: auto; /* Align bot messages to the left */
+    margin-right: auto;
 }
 
 .bot-message .message-text {
-    background-color: #4b5563; /* Gray for the bot */
+    background-color: #e5e7eb; /* Light mode default */
+    color: #1f2937;
     border-top-left-radius: 0.5rem;
 }
 
-/* --- ADDED: Styles for Markdown content --- */
-
-.bot-message .message-text p {
-    margin-bottom: 0.5rem;
+/* Dark mode styles for bot message */
+.dark .bot-message .message-text {
+    background-color: #374151;
+    color: #f9fafb;
 }
 
-.bot-message .message-text p:last-child {
-    margin-bottom: 0;
-}
-
-.bot-message .message-text ul,
-.bot-message .message-text ol {
-    padding-left: 1.5rem;
-    margin: 0.5rem 0;
-}
-
-.bot-message .message-text li {
-    margin-bottom: 0.25rem;
-}
-
-.bot-message .message-text pre {
-    background-color: #1f2937; /* A darker background for code blocks */
+/* --- Gaya untuk Konten Markdown & Tombol Salin --- */
+.bot-message pre {
+    background-color: #f3f4f6; /* Light mode default */
+    color: #1f2937;
     padding: 1rem;
     border-radius: 0.5rem;
     margin: 0.75rem 0;
-    white-space: pre-wrap; /* Wrap long lines of code */
+    white-space: pre-wrap;
     word-wrap: break-word;
     font-family: 'Courier New', Courier, monospace;
     font-size: 0.9em;
+    position: relative;
 }
 
-.bot-message .message-text code {
+.dark .bot-message pre {
     background-color: #1f2937;
+    color: #f9fafb;
+}
+
+.bot-message p > code, .bot-message li > code {
+    background-color: #d1d5db; /* Light mode default */
     padding: 0.2em 0.4em;
-    margin: 0;
-    font-size: 85%;
     border-radius: 3px;
-    font-family: 'Courier New', Courier, monospace;
+    font-size: 85%;
 }
 
-.bot-message .message-text pre code {
-    padding: 0;
-    background-color: transparent;
-    font-size: inherit;
-}
-/* --- End of added styles --- */
-
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Custom scrollbar for a cleaner look */
-#chat-box::-webkit-scrollbar {
-    width: 8px;
-}
-
-#chat-box::-webkit-scrollbar-track {
-    background: #1f2937; /* Even darker gray for the track */
-}
-
-#chat-box::-webkit-scrollbar-thumb {
-    background-color: #4b5563; /* Bot message color */
-    border-radius: 20px;
-    border: 3px solid #1f2937; /* Creates padding around thumb */
+.dark .bot-message p > code, .dark .bot-message li > code {
+    background-color: #4b5563;
 }
 
 
-/* Terapkan animasi 'pulse' ke gelembung pesan bot saat memiliki kelas 'typing' */
+.copy-code-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: #4b5563;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8em;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.bot-message pre:hover .copy-code-btn {
+    opacity: 1;
+}
+
+/* --- Gaya Indikator Loading --- */
 .bot-message.typing .message-text {
-    /* Atur agar teks tidak melompat saat animasi dimulai */
     transform-origin: bottom left;
     animation: pulse 1.5s infinite ease-in-out;
 }
 
-/* Definisikan animasi 'pulse' */
 @keyframes pulse {
-    0% {
-        transform: scale(1);
-        opacity: 0.7;
-    }
-    50% {
-        transform: scale(1.02);
-        opacity: 1;
-    }
-    100% {
-        transform: scale(1);
-        opacity: 0.7;
-    }
+    0%, 100% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.02); opacity: 1; }
 }
+
+/* --- Gaya Tombol Saran --- */
+.suggestion-btn {
+    background-color: #e5e7eb;
+    color: #374151;
+    padding: 8px 12px;
+    border-radius: 16px;
+    font-size: 0.875rem;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s;
+}
+.dark .suggestion-btn {
+    background-color: #374151;
+    color: #d1d5db;
+}
+.suggestion-btn:hover {
+    background-color: #d1d5db;
+}
+.dark .suggestion-btn:hover {
+    background-color: #4b5563;
+}
+
+
+/* --- Scrollbar --- */
+#chat-box::-webkit-scrollbar { width: 8px; }
+#chat-box::-webkit-scrollbar-track { background: #f3f4f6; } /* Light */
+.dark #chat-box::-webkit-scrollbar-track { background: #1f2937; } /* Dark */
+#chat-box::-webkit-scrollbar-thumb { background-color: #d1d5db; border-radius: 20px; } /* Light */
+.dark #chat-box::-webkit-scrollbar-thumb { background-color: #4b5563; } /* Dark */
